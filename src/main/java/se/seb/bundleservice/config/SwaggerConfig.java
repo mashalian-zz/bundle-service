@@ -19,7 +19,7 @@ public class SwaggerConfig {
                         .title("SEB Bundle Service")
                         .contact(new Contact()
                                 .name("Amir Reza Mashalian")
-                                .url("https://github.com/mashalian/bundle-service")//TODO update with github url
+                                .url("https://github.com/mashalian/bundle-service")
                         )
                         .version(SwaggerConfig.class.getPackage().getImplementationVersion())
                         .description("Recruitment task")
