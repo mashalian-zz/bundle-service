@@ -17,8 +17,8 @@ public class QuestionRequest {
     @NotEmpty
     @NotNull
     String customerName;
-    @Positive
-    int age;
+
+    Age age;
     @NotNull
     Student student;
     @Min(0)

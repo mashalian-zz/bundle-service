@@ -7,27 +7,26 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import se.seb.bundleservice.model.Bundle;
-import se.seb.bundleservice.model.ModifySuggestedBundleRequest;
+import se.seb.bundleservice.model.Age;
+import se.seb.bundleservice.model.BundleResponse;
+import se.seb.bundleservice.model.CustomizedBundleResponse;
+import se.seb.bundleservice.model.ModifyBundleRequest;
 import se.seb.bundleservice.model.QuestionRequest;
 import se.seb.bundleservice.model.Student;
-import se.seb.bundleservice.model.Suggestion;
 import se.seb.bundleservice.service.BundleService;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static se.seb.bundleservice.model.BundleName.GOLD;
-import static se.seb.bundleservice.model.BundleName.JUNIOR_SAVER;
-import static se.seb.bundleservice.model.Product.CREDIT_CARD;
+import static se.seb.bundleservice.model.Bundle.GOLD;
+import static se.seb.bundleservice.model.Bundle.JUNIOR_SAVER;
 import static se.seb.bundleservice.model.Product.CURRENT_ACCOUNT;
 import static se.seb.bundleservice.model.Product.CURRENT_ACCOUNT_PLUS;
 import static se.seb.bundleservice.model.Product.DEBIT_CARD;
@@ -48,41 +47,49 @@ class BundleControllerTest {
 
     @Test
     void shouldSuggestBundleOfJuniorSaver() throws Exception {
-        when(bundleService.suggestBundle(any(QuestionRequest.class)))
-                .thenReturn(Suggestion.builder()
-                        .customerName("Robin")
-                        .bundle(new Bundle(JUNIOR_SAVER.getLabel(), List.of(JUNIOR_SAVER_ACCOUNT), 0))
-                        .build());
-        QuestionRequest question = new QuestionRequest("Robin", 15, Student.NO, 0);
+        BundleResponse bundleResponse = BundleResponse.builder()
+                .bundle(JUNIOR_SAVER)
+                .BundleName(JUNIOR_SAVER.getName())
+                .products(JUNIOR_SAVER.getProducts())
+                .build();
+        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        given(bundleService.suggestBundle(eq(question))).willReturn(bundleResponse);
 
         mockMvc.perform(post("/suggest")
                         .content(objectMapper.writeValueAsString(question))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.customerName", equalTo("Robin")))
-                .andExpect(jsonPath("$.bundle.name", equalTo("Junior Saver")))
-                .andExpect(jsonPath("$.bundle.value", equalTo(0)))
-                .andExpect(jsonPath("$.bundle.products", equalTo(List.of(JUNIOR_SAVER_ACCOUNT.name()))))
+                .andExpect(jsonPath("$.bundle", equalTo(JUNIOR_SAVER.name())))
+                .andExpect(jsonPath("$.bundleName", equalTo("Junior Saver")))
+                .andExpect(jsonPath("$.products", equalTo(List.of(JUNIOR_SAVER_ACCOUNT.name()))))
                 .andDo(print());
     }
 
     @Test
     void shouldCustomizeGoldBundle() throws Exception {
-        ModifySuggestedBundleRequest request = new ModifySuggestedBundleRequest("Robin", List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD), List.of(CURRENT_ACCOUNT, CREDIT_CARD));
-        when(bundleService.modifySuggestedBundle(eq(request)))
-                .thenReturn(Suggestion.builder()
-                        .customerName("Robin")
-                        .bundle(new Bundle(GOLD.getLabel(), List.of(CURRENT_ACCOUNT, DEBIT_CARD, CREDIT_CARD), 3))
-                        .build());
+
+        BundleResponse bundleResponse = BundleResponse.builder()
+                .bundle(GOLD)
+                .BundleName(GOLD.getName())
+                .products(GOLD.getProducts())
+                .build();
+        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        ModifyBundleRequest modifyBundleRequest = new ModifyBundleRequest(bundleResponse.getBundle(), question, List.of(CURRENT_ACCOUNT_PLUS), List.of(CURRENT_ACCOUNT));
+        CustomizedBundleResponse response = CustomizedBundleResponse.builder()
+                .bundleName(bundleResponse.getBundleName())
+                .customerName(question.getCustomerName())
+                .products(List.of(CURRENT_ACCOUNT, DEBIT_CARD, GOLD_CREDIT_CARD))
+                .build();
+        given(bundleService.modifySuggestedBundle(eq(modifyBundleRequest))).willReturn(response);
+
 
         mockMvc.perform(put("/customize")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(modifyBundleRequest)))
                 .andDo(print())
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.customerName", equalTo("Robin")))
-                .andExpect(jsonPath("$.bundle.name", equalTo(GOLD.getLabel())))
-                .andExpect(jsonPath("$.bundle.value", equalTo(3)))
-                .andExpect(jsonPath("$.bundle.products", equalTo(List.of(CURRENT_ACCOUNT.name(), DEBIT_CARD.name(), CREDIT_CARD.name()))));
+                .andExpect(jsonPath("$.bundleName", equalTo(GOLD.getName())))
+                .andExpect(jsonPath("$.products", equalTo(List.of(CURRENT_ACCOUNT.name(), DEBIT_CARD.name(), GOLD_CREDIT_CARD.name()))));
     }
 }

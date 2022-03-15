@@ -10,9 +10,12 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModifySuggestedBundleRequest {
+public class ModifyBundleRequest {
+
     @NotNull
-    String customerName;
+    Bundle bundle;
+    @NotNull
+    QuestionRequest questionRequest;
     List<Product> removeProducts;
     List<Product> addProducts;
 }
