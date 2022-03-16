@@ -40,18 +40,16 @@ public class BundleService {
         };
     }
 
-    public CustomizedBundleResponse modifySuggestedBundle(CustomizeBundleRequest modifyBundleRequest) {
-        Bundle bundle = modifyBundleRequest.getBundle();
-        QuestionRequest questionRequest = modifyBundleRequest.getQuestionRequest();
-        CustomizeBundleRequest request = validateRequest(bundle, modifyBundleRequest, questionRequest);
-        return switch (bundle) {
-            case GOLD -> modifyGoldBundle(bundle, request, questionRequest);
-            case CLASSIC_PLUS -> modifyClassicPlusBundle(bundle, request, questionRequest);
-            case CLASSIC -> modifyClassicBundle(bundle, request, questionRequest);
-            case STUDENT -> modifyStudentBundle(bundle, request, questionRequest);
+    public CustomizedBundleResponse modifySuggestedBundle(CustomizeBundleRequest customizeBundleRequest) {
+        CustomizeBundleRequest request = validateRequest(customizeBundleRequest);
+        return switch (customizeBundleRequest.getBundle()) {
+            case GOLD -> modifyGoldBundle(request);
+            case CLASSIC_PLUS -> modifyClassicPlusBundle(request);
+            case CLASSIC -> modifyClassicBundle(request);
+            case STUDENT -> modifyStudentBundle(request);
             case JUNIOR_SAVER -> CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(questionRequest.getCustomerName())
+                    .bundleName(customizeBundleRequest.getBundle().getName())
+                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
                     .message("Junior Saver cannot do any modification")
                     .build();
         };
@@ -85,89 +83,110 @@ public class BundleService {
                 .build();
     }
 
-    private CustomizedBundleResponse modifyStudentBundle(Bundle bundle, CustomizeBundleRequest modifyBundleRequest, QuestionRequest questionRequest) {
-        if (CollectionUtils.containsAny(modifyBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CURRENT_ACCOUNT))) {
-            log.warn("Customer with name {} and Student bundle is not allowed to have current account/plus or any gold credit card.", questionRequest.getCustomerName());
+    private CustomizedBundleResponse modifyStudentBundle(CustomizeBundleRequest customizeBundleRequest) {
+        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CURRENT_ACCOUNT))) {
+            log.warn("Customer with name {} and Student bundle is not allowed to have current account/plus or any gold credit card.",
+                    customizeBundleRequest.getQuestionRequest().getCustomerName());
+
             return CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(questionRequest.getCustomerName())
+                    .bundleName(customizeBundleRequest.getBundle().getName())
+                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
                     .message("Having products from Gold bundle or current account are not allowed in Student bundle")
                     .build();
         } else {
-            return doModifyProductsForBundle(bundle, modifyBundleRequest, questionRequest.getCustomerName());
+            return doModifyProductsForBundle(customizeBundleRequest);
         }
     }
 
-    private CustomizedBundleResponse modifyClassicBundle(Bundle bundle, CustomizeBundleRequest modifyBundleRequest, QuestionRequest questionRequest) {
-        if (CollectionUtils.containsAny(modifyBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CREDIT_CARD))) {
-            log.warn("Customer with name {} and classic bundle is not allowed to have current account plus or any credit card.", questionRequest.getCustomerName());
+    private CustomizedBundleResponse modifyClassicBundle(CustomizeBundleRequest customizeBundleRequest) {
+        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CREDIT_CARD))) {
+            log.warn("Customer with name {} and classic bundle is not allowed to have current account plus or any credit card.",
+                    customizeBundleRequest.getQuestionRequest().getCustomerName());
+
             return CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(questionRequest.getCustomerName())
+                    .bundleName(customizeBundleRequest.getBundle().getName())
+                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
                     .message("Having products from Gold bundle or any credit cards are not allowed in Classic bundle")
                     .build();
         } else {
-            return doModifyProductsForBundle(bundle, modifyBundleRequest, questionRequest.getCustomerName());
+            return doModifyProductsForBundle(customizeBundleRequest);
         }
     }
 
-    private CustomizedBundleResponse modifyClassicPlusBundle(Bundle bundle, CustomizeBundleRequest modifyBundleRequest, QuestionRequest questionRequest) {
-        if (CollectionUtils.containsAny(modifyBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD))) {
-            log.warn("Customer with name {} tries to have current account plus or gold credit card.", questionRequest.getCustomerName());
+    private CustomizedBundleResponse modifyClassicPlusBundle(CustomizeBundleRequest customizeBundleRequest) {
+        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD))) {
+            log.warn("Customer with name {} tries to have current account plus or gold credit card.",
+                    customizeBundleRequest.getQuestionRequest().getCustomerName());
+
             return CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(questionRequest.getCustomerName())
+                    .bundleName(customizeBundleRequest.getBundle().getName())
+                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
                     .message("Having products from Gold bundle are not allowed in Classic Plus bundle")
                     .build();
         } else {
-            return doModifyProductsForBundle(bundle, modifyBundleRequest, questionRequest.getCustomerName());
+            return doModifyProductsForBundle(customizeBundleRequest);
         }
     }
 
-    private CustomizedBundleResponse modifyGoldBundle(Bundle bundle, CustomizeBundleRequest modifyBundleRequest, QuestionRequest questionRequest) {
-        if (modifyBundleRequest.getAddProducts().contains(CURRENT_ACCOUNT) && !modifyBundleRequest.getRemoveProducts().contains(CURRENT_ACCOUNT_PLUS)) {
-            log.warn("Customer with name {} tries to have more that one account.", questionRequest.getCustomerName());
+    private CustomizedBundleResponse modifyGoldBundle(CustomizeBundleRequest customizeBundleRequest) {
+        if (customizeBundleRequest.getAddProducts().contains(CURRENT_ACCOUNT) &&
+                !customizeBundleRequest.getRemoveProducts().contains(CURRENT_ACCOUNT_PLUS)) {
+            log.warn("Customer with name {} tries to have more that one account.",
+                    customizeBundleRequest.getQuestionRequest().getCustomerName());
+
             return CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(questionRequest.getCustomerName())
+                    .bundleName(customizeBundleRequest.getBundle().getName())
+                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
                     .message("Having more than one account is not allowed")
                     .build();
         } else {
-            return doModifyProductsForBundle(bundle, modifyBundleRequest, questionRequest.getCustomerName());
+            return doModifyProductsForBundle(customizeBundleRequest);
         }
     }
 
-    private CustomizedBundleResponse doModifyProductsForBundle(Bundle bundle, CustomizeBundleRequest request, String customerName) {
-        List<Product> removeProducts = request.getRemoveProducts() == null ? List.of() : request.getRemoveProducts();
-        List<Product> addProducts = request.getAddProducts() == null ? List.of() : request.getAddProducts();
-        List<Product> products = new ArrayList<>(bundle.getProducts());
-        products.addAll(addProducts);
-        products.removeAll(removeProducts);
-        long count = products.stream()
-                .filter(Product::isAccount)
-                .distinct()
-                .count();
+    private CustomizedBundleResponse doModifyProductsForBundle(CustomizeBundleRequest request) {
+        List<Product> products = customizeProducts(request);
+        long count = checkCustomizedProductsHasAccount(products);
+        String message;
         if (count == 0) {
-            return CustomizedBundleResponse.builder()
-                    .bundleName(bundle.getName())
-                    .customerName(request.getQuestionRequest().getCustomerName())
-                    .message("Having at least one account is necessary")
-                    .build();
+            message = "Having at least one account is necessary";
+            return getCustomizedBundleResponse(request, message, null);
         }
-        List<Product> finalProducts = products.stream().distinct().toList();
 
-        log.info("Customer with name {} customized products {}", customerName, finalProducts.stream().map(Product::getLabel).toList());
+        log.info("Customer with name {} customized products {}", request.getQuestionRequest().getCustomerName(), products.stream().map(Product::getLabel).toList());
+        message = "Products has been modified successfully.";
+        return getCustomizedBundleResponse(request, message, products);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponse(CustomizeBundleRequest request, String message, List<Product> products) {
         return CustomizedBundleResponse.builder()
+                .bundleName(request.getBundle().getName())
                 .customerName(request.getQuestionRequest().getCustomerName())
-                .bundleName(bundle.getName())
-                .products(finalProducts)
-                .message("Products has been modified successfully.")
+                .products(products)
+                .message(message)
                 .build();
     }
 
-    private CustomizeBundleRequest validateRequest(Bundle bundle, CustomizeBundleRequest modifyBundleRequest, QuestionRequest questionRequest) {
-        List<Product> addProducts = modifyBundleRequest.getAddProducts() == null ? List.of() : modifyBundleRequest.getAddProducts();
-        List<Product> removeProducts = modifyBundleRequest.getRemoveProducts() == null ? List.of() : modifyBundleRequest.getRemoveProducts();
+    private long checkCustomizedProductsHasAccount(List<Product> products) {
+        return products.stream()
+                .filter(Product::isAccount)
+                .count();
+    }
+
+    private List<Product> customizeProducts(CustomizeBundleRequest request) {
+        List<Product> removeProducts = request.getRemoveProducts() == null ? List.of() : request.getRemoveProducts();
+        List<Product> addProducts = request.getAddProducts() == null ? List.of() : request.getAddProducts();
+        List<Product> products = new ArrayList<>(request.getBundle().getProducts());
+        products.addAll(addProducts);
+        products.removeAll(removeProducts);
+        return products.stream().distinct().toList();
+    }
+
+    private CustomizeBundleRequest validateRequest(CustomizeBundleRequest customizeBundleRequest) {
+        List<Product> addProducts = customizeBundleRequest.getAddProducts() == null ? List.of() : customizeBundleRequest.getAddProducts();
+        List<Product> removeProducts = customizeBundleRequest.getRemoveProducts() == null ? List.of() : customizeBundleRequest.getRemoveProducts();
+        QuestionRequest questionRequest = customizeBundleRequest.getQuestionRequest();
+        Bundle bundle = customizeBundleRequest.getBundle();
         CustomizeBundleRequest bundleRequest = new CustomizeBundleRequest(bundle, questionRequest, removeProducts, addProducts);
         List<String> largeBundles = List.of(GOLD.getName(), CLASSIC.getName(), CLASSIC_PLUS.getName());
         if (largeBundles.contains(bundle.getName())) {
