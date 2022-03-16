@@ -11,11 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import se.seb.bundleservice.model.Bundle;
 import se.seb.bundleservice.model.BundleResponse;
-import se.seb.bundleservice.model.ModifyBundleRequest;
-import se.seb.bundleservice.model.QuestionRequest;
+import se.seb.bundleservice.model.CustomizeBundleRequest;
 import se.seb.bundleservice.model.CustomizedBundleResponse;
+import se.seb.bundleservice.model.QuestionRequest;
 import se.seb.bundleservice.service.BundleService;
 
 import javax.validation.Valid;
@@ -43,7 +42,7 @@ public class BundleController {
     @ApiResponses({
             @ApiResponse(responseCode = "202", description = "Customized suggestion successfully"),
             @ApiResponse(responseCode = "451", description = "Unable to customize suggestion due to legal reasons", content = @Content)})
-    public ResponseEntity<CustomizedBundleResponse> customizeSuggestion(@Valid @RequestBody ModifyBundleRequest request) {
+    public ResponseEntity<CustomizedBundleResponse> customizeSuggestion(@Valid @RequestBody CustomizeBundleRequest request) {
         return ResponseEntity.accepted()
                 .body(bundleService.modifySuggestedBundle(request));
     }

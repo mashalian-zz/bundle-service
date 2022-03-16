@@ -1,21 +1,21 @@
 package se.seb.bundleservice.model;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
-@Value
-@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomizeBundleRequest {
-
-    @NotNull @Valid
-    QuestionRequest questionRequest;
 
     @NotNull
     Bundle bundle;
-
-    @NotNull @Valid
-    ModifyBundleRequest modifyBundleRequest;
+    @NotNull
+    QuestionRequest questionRequest;
+    List<Product> removeProducts;
+    List<Product> addProducts;
 }

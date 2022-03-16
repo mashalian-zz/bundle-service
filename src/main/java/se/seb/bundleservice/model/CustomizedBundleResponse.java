@@ -17,4 +17,6 @@ public class CustomizedBundleResponse {
     String bundleName;
     @With
     List<Product> products;
+    @NotEmpty
+    String message;
 }
