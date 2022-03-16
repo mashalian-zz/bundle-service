@@ -114,17 +114,6 @@ class BundleServiceTest {
         assertThat(bundleResponse.getBundleName()).isEqualTo("Cannot suggest any bundle");
     }
 
-    //    @Test
-//    void shouldThrowUnmatchedConditionsExceptionWhenConditionsAreNotMatched() {
-//        String jason = "Jason";
-//        QuestionRequest question = new QuestionRequest(jason, 30, Student.NO, 0);
-//
-//        assertThatExceptionOfType(UnmatchedConditionsException.class)
-//                .isThrownBy(() -> bundleService.suggestBundle(question))
-//                .withMessage("Conditions are not matched to suggest any bundle!");
-//    }
-
-
     @Test
     void shouldModifyGoldBundle() {
         String robin = "Robin";
@@ -181,7 +170,7 @@ class BundleServiceTest {
         String robin = "Robin";
         QuestionRequest questionRequest = new QuestionRequest(robin, Age.ADULT, Student.NO, 50000);
         BundleResponse goldBundleResponse = bundleService.suggestBundle(questionRequest);
-        CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(CREDIT_CARD),null);
+        CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(CREDIT_CARD), null);
 
         CustomizedBundleResponse response = bundleService.modifySuggestedBundle(modifyBundleRequest);
 
@@ -203,17 +192,6 @@ class BundleServiceTest {
                 .isThrownBy(() -> bundleService.modifySuggestedBundle(modifyBundleRequest))
                 .withMessage("Junior Saver Account or Student Account is not acceptable for Gold or classic or classic plus bundle");
     }
-
-//    @Test
-//    void shouldThrowNotFoundExceptionIfCustomerDoesNotHaveSuggestionAndWantsToModify() {
-//        String amir = "Amir";
-//        when(suggestionRepository.getSuggestionByCustomerName(amir)).thenReturn(Optional.empty());
-//        ModifyBundleRequest modifySuggestedBundleRequest = new ModifyBundleRequest(amir, List.of(GOLD_CREDIT_CARD), List.of(STUDENT_ACCOUNT));
-//
-//        assertThatExceptionOfType(NotFoundException.class)
-//                .isThrownBy(() -> bundleService.modifySuggestedBundle(modifySuggestedBundleRequest))
-//                .withMessage(String.format("Customer with name %s does not have any suggestion to modify", amir));
-//    }
 
     @Test
     void shouldModifyClassicPlusBundle() {
@@ -265,7 +243,7 @@ class BundleServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionIfClassicBundleWantsToHaveCreditCard() {
+    void shouldNotCustomizeIfClassicBundleWantsToHaveCreditCard() {
         String robin = "Robin";
         QuestionRequest questionRequest = new QuestionRequest(robin, Age.ADULT, Student.NO, 11000);
         BundleResponse classicBundle = bundleService.suggestBundle(questionRequest);
