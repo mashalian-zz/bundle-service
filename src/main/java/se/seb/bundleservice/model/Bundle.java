@@ -20,7 +20,8 @@ public enum Bundle {
     STUDENT(2, "Student", List.of(STUDENT_ACCOUNT, DEBIT_CARD, CREDIT_CARD), 0),
     CLASSIC(3, "Classic", List.of(CURRENT_ACCOUNT, DEBIT_CARD), 1),
     CLASSIC_PLUS(4, "Classic Plus", List.of(CURRENT_ACCOUNT, DEBIT_CARD, CREDIT_CARD), 2),
-    GOLD(5, "Gold", List.of(CURRENT_ACCOUNT_PLUS, DEBIT_CARD, GOLD_CREDIT_CARD), 3);
+    GOLD(5, "Gold", List.of(CURRENT_ACCOUNT_PLUS, DEBIT_CARD, GOLD_CREDIT_CARD), 3),
+    EMPTY(6, "Empty", List.of(), 0);
 
     @Getter
     private final int id;

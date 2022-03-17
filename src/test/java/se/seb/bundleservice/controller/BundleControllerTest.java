@@ -51,7 +51,7 @@ class BundleControllerTest {
                 .BundleName(JUNIOR_SAVER.getName())
                 .products(JUNIOR_SAVER.getProducts())
                 .build();
-        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        QuestionRequest question = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         given(bundleService.suggestBundle(eq(question))).willReturn(bundleResponse);
 
         mockMvc.perform(post("/suggest")
@@ -70,11 +70,10 @@ class BundleControllerTest {
                 .BundleName(GOLD.getName())
                 .products(GOLD.getProducts())
                 .build();
-        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        QuestionRequest question = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, question, List.of(CURRENT_ACCOUNT_PLUS), List.of(CURRENT_ACCOUNT));
         CustomizedBundleResponse response = CustomizedBundleResponse.builder()
                 .bundleName(bundleResponse.getBundleName())
-                .customerName(question.getCustomerName())
                 .products(List.of(CURRENT_ACCOUNT, DEBIT_CARD, GOLD_CREDIT_CARD))
                 .build();
         given(bundleService.modifySuggestedBundle(eq(modifyBundleRequest))).willReturn(response);
@@ -85,7 +84,7 @@ class BundleControllerTest {
                         .content(objectMapper.writeValueAsString(modifyBundleRequest)))
                 .andDo(print())
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.customerName", equalTo("Robin")))
+                //.andExpect(jsonPath("$.customerName", equalTo("Robin")))
                 .andExpect(jsonPath("$.bundleName", equalTo(GOLD.getName())))
                 .andExpect(jsonPath("$.products", equalTo(List.of(CURRENT_ACCOUNT.name(), DEBIT_CARD.name(), GOLD_CREDIT_CARD.name()))));
     }

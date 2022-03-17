@@ -11,10 +11,7 @@ import java.util.List;
 public class CustomizedBundleResponse {
 
     @NotEmpty
-    String customerName;
-    @NotEmpty
     String bundleName;
-    //@With
     List<Product> products;
     @NotEmpty
     String message;
