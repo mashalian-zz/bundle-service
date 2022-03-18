@@ -142,11 +142,11 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseWithViolations(CustomizeBundleRequest request, List<Product> products, List<Violations> violations, List<Product> forbiddenProducts) {
-        log.warn("Unable to customize.");
         if (violations.contains(ACCOUNT_ISSUE)) {
             forbiddenProducts = Stream.concat(forbiddenProducts.stream(),
                     products.stream().filter(Product::isAccount)).distinct().toList();
         }
+        log.warn("Unable to customize due to {}", violations);
         return getCustomizedBundleResponse(request, violations, products, forbiddenProducts);
     }
 
