@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Value
@@ -13,6 +14,8 @@ public class CustomizedBundleResponse {
     @NotEmpty
     String bundleName;
     List<Product> products;
-    @NotEmpty
-    String message;
+    List<Product> illegalProducts;
+    @NotNull
+    Status status;
+    List<Violations> violations;
 }
