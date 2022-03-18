@@ -114,7 +114,7 @@ class BundleServiceTest {
     void shouldNotCustomizeBundleIfCustomerDoesNotHaveAccountWithCorrectIncome() {
         QuestionRequest question = new QuestionRequest(Age.ADULT, Student.NO, 10000);
         CustomizeBundleRequest request = new CustomizeBundleRequest(CLASSIC, question, List.of(CURRENT_ACCOUNT), null);
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(request);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(request);
 
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -131,7 +131,7 @@ class BundleServiceTest {
         QuestionRequest question = new QuestionRequest(Age.ADULT, Student.YES, 0);
         CustomizeBundleRequest request = new CustomizeBundleRequest(STUDENT, question, List.of(STUDENT_ACCOUNT), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(request);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(request);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -151,7 +151,7 @@ class BundleServiceTest {
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(GOLD_CREDIT_CARD), List.of(CREDIT_CARD));
 
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -167,7 +167,7 @@ class BundleServiceTest {
     void shouldNotCustomizeGoldBundleIfCustomerWantsToHaveTwoAccounts() {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 50000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(GOLD_CREDIT_CARD), List.of(CURRENT_ACCOUNT, CREDIT_CARD));
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -188,7 +188,7 @@ class BundleServiceTest {
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, null, List.of(GOLD_CREDIT_CARD));
 
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -206,7 +206,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 50000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(CREDIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -223,7 +223,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 50000);
         CustomizeBundleRequest customizeBundleRequest = new CustomizeBundleRequest(GOLD, questionRequest, List.of(GOLD_CREDIT_CARD), List.of(STUDENT_ACCOUNT));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(customizeBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(customizeBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -242,7 +242,7 @@ class BundleServiceTest {
         BundleResponse classicBundlePlusResponse = bundleService.suggestBundle(questionRequest);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC_PLUS, questionRequest, List.of(CREDIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -260,7 +260,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 25000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC_PLUS, questionRequest, List.of(CURRENT_ACCOUNT), List.of(CURRENT_ACCOUNT_PLUS));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -277,7 +277,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 11000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC, questionRequest, List.of(DEBIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -293,7 +293,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 11000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC, questionRequest, null, List.of(CREDIT_CARD));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -310,7 +310,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.YES, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(STUDENT, questionRequest, List.of(DEBIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -327,7 +327,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.YES, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(STUDENT, questionRequest, List.of(STUDENT_ACCOUNT), List.of(CURRENT_ACCOUNT));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -344,7 +344,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(JUNIOR_SAVER, questionRequest, null, List.of(DEBIT_CARD));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -365,7 +365,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 18000);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC_PLUS, questionRequest, List.of(CURRENT_ACCOUNT, CREDIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -382,7 +382,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.NO, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(CLASSIC, questionRequest, List.of(DEBIT_CARD), null);
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);
@@ -401,7 +401,7 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.ADULT, Student.YES, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(STUDENT, questionRequest, List.of(DEBIT_CARD), List.of(CURRENT_ACCOUNT));
 
-        ResponseEntity<CustomizedBundleResponse> response = bundleService.modifySuggestedBundle(modifyBundleRequest);
+        ResponseEntity<CustomizedBundleResponse> response = bundleService.customizeBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS);

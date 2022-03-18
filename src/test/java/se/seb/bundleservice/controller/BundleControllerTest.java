@@ -79,7 +79,7 @@ class BundleControllerTest {
                 .status(Status.SUCCESSFUL)
                 .products(List.of(CURRENT_ACCOUNT, DEBIT_CARD, GOLD_CREDIT_CARD))
                 .build();
-        given(bundleService.modifySuggestedBundle(eq(modifyBundleRequest))).willReturn(ResponseEntity.accepted().body(response));
+        given(bundleService.customizeBundle(eq(modifyBundleRequest))).willReturn(ResponseEntity.accepted().body(response));
 
 
         mockMvc.perform(put("/customize")

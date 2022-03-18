@@ -48,7 +48,7 @@ public class BundleService {
         };
     }
 
-    public ResponseEntity<CustomizedBundleResponse> modifySuggestedBundle(CustomizeBundleRequest customizeBundleRequest) {
+    public ResponseEntity<CustomizedBundleResponse> customizeBundle(CustomizeBundleRequest customizeBundleRequest) {
         CustomizeBundleRequest request = validateRequest(customizeBundleRequest);
         CustomizedBundleResponse response = customizeProducts(request);
         if (response.getStatus().equals(Status.SUCCESSFUL)) {
