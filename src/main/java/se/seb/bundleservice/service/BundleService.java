@@ -117,10 +117,9 @@ public class BundleService {
         }
         if (questionRequest.getStudent().equals(Student.YES)) {
             return getCustomizedBundleResponseForStudent(request, products, violations);
-        } else if (income == 0 && products.size() > 0) {
+        } else if (income == 0) {
             return getCustomizedBundleResponseForIncomeZero(request, products, violations);
-        }
-        if (income <= 12000) {
+        }else if (income <= 12000) {
             return getCustomizedBundleResponseForIncomeUpTo12K(request, products, violations);
         } else if (income <= 40000) {
             return getCustomizedBundleResponseForIncomeUpTo40K(request, products, violations);
