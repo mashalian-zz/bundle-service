@@ -119,7 +119,7 @@ public class BundleService {
             return getCustomizedBundleResponseForStudent(request, products, violations);
         } else if (income == 0) {
             return getCustomizedBundleResponseForIncomeZero(request, products, violations);
-        }else if (income <= 12000) {
+        } else if (income <= 12000) {
             return getCustomizedBundleResponseForIncomeUpTo12K(request, products, violations);
         } else if (income <= 40000) {
             return getCustomizedBundleResponseForIncomeUpTo40K(request, products, violations);
@@ -177,7 +177,7 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForStudent(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbiddenProducts = getForbiddenProducts(products,Violations.ILLEGAL_PRODUCTS_FOR_STUDENT.getProducts());
+        List<Product> forbiddenProducts = getForbiddenProducts(products, Violations.ILLEGAL_PRODUCTS_FOR_STUDENT.getProducts());
         if (!forbiddenProducts.isEmpty()) {
             violations.add(Violations.ILLEGAL_PRODUCTS_FOR_STUDENT);
         }
