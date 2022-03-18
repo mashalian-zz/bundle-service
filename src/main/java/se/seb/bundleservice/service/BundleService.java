@@ -34,6 +34,11 @@ import static se.seb.bundleservice.model.Product.DEBIT_CARD;
 import static se.seb.bundleservice.model.Product.GOLD_CREDIT_CARD;
 import static se.seb.bundleservice.model.Product.JUNIOR_SAVER_ACCOUNT;
 import static se.seb.bundleservice.model.Product.STUDENT_ACCOUNT;
+import static se.seb.bundleservice.model.Violations.ACCOUNT_ISSUE;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_MORE_THAN_40K;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_UP_TO_12K;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_UP_TO_40K;
+import static se.seb.bundleservice.model.Violations.INCOME_ZERO;
 
 
 @Service
@@ -115,7 +120,7 @@ public class BundleService {
         long hasAccount = checkCustomizedProductsHasAccount(products);
         List<Violations> violations = new ArrayList<>();
         if (hasAccount == 0 || hasAccount > 1) {
-            violations.add(Violations.ACCOUNT_ISSUE);
+            violations.add(ACCOUNT_ISSUE);
         }
         if (questionRequest.getStudent().equals(Student.YES)) {
             return getCustomizedBundleResponseForStudent(request, products, violations);
@@ -132,22 +137,21 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForJuniorSaver(CustomizeBundleRequest request, List<Product> products) {
-        List<Product> forbidden = List.of(STUDENT_ACCOUNT, DEBIT_CARD, CREDIT_CARD, GOLD_CREDIT_CARD, CURRENT_ACCOUNT, CURRENT_ACCOUNT_PLUS);
-        List<Product> forbiddenProducts = getForbiddenProducts(products, forbidden);
+        List<Product> forbiddenProducts = getForbiddenProducts(products, Violations.JUNIOR_ISSUE.getProducts());
         return getCustomizedBundleResponseWithViolations(request, products, List.of(Violations.JUNIOR_ISSUE), forbiddenProducts);
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForIncomeMoreThan40K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbiddenProducts = getForbiddenProducts(products, List.of(JUNIOR_SAVER_ACCOUNT, STUDENT_ACCOUNT));
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_MORE_THAN_40K.getProducts());
         if (!forbiddenProducts.isEmpty()) {
-            violations.add(Violations.ILLEGAL_PRODUCTS_MORE_THAN_40K);
+            violations.add(ILLEGAL_PRODUCTS_MORE_THAN_40K);
         }
         return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseWithViolations(CustomizeBundleRequest request, List<Product> products, List<Violations> violations, List<Product> forbiddenProducts) {
         log.warn("Unable to customize.");
-        if (violations.contains(Violations.ACCOUNT_ISSUE)) {
+        if (violations.contains(ACCOUNT_ISSUE)) {
             forbiddenProducts = Stream.concat(forbiddenProducts.stream(),
                     products.stream().filter(Product::isAccount)).distinct().toList();
         }
@@ -155,7 +159,7 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForIncomeUpTo40K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbiddenProducts = getForbiddenProducts(products, List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, STUDENT_ACCOUNT, JUNIOR_SAVER_ACCOUNT));
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_UP_TO_40K.getProducts());
 
         if (!forbiddenProducts.isEmpty()) {
             violations.add(Violations.ILLEGAL_PRODUCTS_UP_TO_40K);
@@ -164,25 +168,24 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForIncomeUpTo12K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbiddenProducts = getForbiddenProducts(products,
-                List.of(CURRENT_ACCOUNT_PLUS, CREDIT_CARD, GOLD_CREDIT_CARD, STUDENT_ACCOUNT, JUNIOR_SAVER_ACCOUNT));
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_UP_TO_12K.getProducts());
 
         if (!forbiddenProducts.isEmpty()) {
-            violations.add(Violations.ILLEGAL_PRODUCTS_UP_TO_12K);
+            violations.add(ILLEGAL_PRODUCTS_UP_TO_12K);
         }
         return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForIncomeZero(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbidden = List.of(STUDENT_ACCOUNT, DEBIT_CARD, CREDIT_CARD, GOLD_CREDIT_CARD, CURRENT_ACCOUNT, CURRENT_ACCOUNT_PLUS);
-        List<Product> forbiddenProducts = getForbiddenProducts(products, forbidden);
-        return getCustomizedBundleResponseWithViolations(request, products, List.of(Violations.INCOME_ZERO), forbiddenProducts);
+        List<Product> forbiddenProducts = getForbiddenProducts(products, INCOME_ZERO.getProducts());
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(INCOME_ZERO);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForStudent(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
-        List<Product> forbiddenProducts = getForbiddenProducts(products,
-                List.of(CURRENT_ACCOUNT_PLUS, CURRENT_ACCOUNT, GOLD_CREDIT_CARD, JUNIOR_SAVER_ACCOUNT));
-
+        List<Product> forbiddenProducts = getForbiddenProducts(products,Violations.ILLEGAL_PRODUCTS_FOR_STUDENT.getProducts());
         if (!forbiddenProducts.isEmpty()) {
             violations.add(Violations.ILLEGAL_PRODUCTS_FOR_STUDENT);
         }
