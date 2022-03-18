@@ -5,22 +5,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import se.seb.bundleservice.exception.UnmatchedConditionsException;
 import se.seb.bundleservice.model.Age;
 import se.seb.bundleservice.model.BundleResponse;
 import se.seb.bundleservice.model.CustomizeBundleRequest;
 import se.seb.bundleservice.model.CustomizedBundleResponse;
 import se.seb.bundleservice.model.Message;
-import se.seb.bundleservice.model.Product;
 import se.seb.bundleservice.model.QuestionRequest;
 import se.seb.bundleservice.model.Student;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static se.seb.bundleservice.model.Bundle.CLASSIC;
 import static se.seb.bundleservice.model.Bundle.CLASSIC_PLUS;
 import static se.seb.bundleservice.model.Bundle.GOLD;
@@ -301,11 +296,11 @@ class BundleServiceTest {
         QuestionRequest questionRequest = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         BundleResponse juniorSaveBundle = bundleService.suggestBundle(questionRequest);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(JUNIOR_SAVER, questionRequest, null, List.of(DEBIT_CARD));
-
+        String expectedMessage = "Junior Saver cannot do any modification,".concat(String.join(",", DEBIT_CARD.getLabel()));
         CustomizedBundleResponse response = bundleService.modifySuggestedBundle(modifyBundleRequest);
 
         assertThat(response).isNotNull();
-        assertThat(response.getMessage()).isEqualTo("Junior Saver cannot do any modification");
+        assertThat(response.getMessage()).isEqualTo(expectedMessage);
         assertThat(response.getBundleName()).isEqualTo(juniorSaveBundle.getBundleName());
         assertThat(response.getProducts()).isNotNull();
     }

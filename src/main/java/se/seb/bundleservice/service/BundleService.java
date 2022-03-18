@@ -99,11 +99,7 @@ public class BundleService {
     private CustomizedBundleResponse validateCustomizedProducts(CustomizeBundleRequest request, List<Product> products) {
         QuestionRequest questionRequest = request.getQuestionRequest();
         if (questionRequest.getAge().equals(UNDER_AGE)) {
-            return CustomizedBundleResponse.builder()
-                    .products(List.of(JUNIOR_SAVER_ACCOUNT))
-                    .bundleName(JUNIOR_SAVER.getName())
-                    .message("Junior Saver cannot do any modification")
-                    .build();
+            return getCustomizedBundleResponseForJuniorSaver(request, products);
         }
         int income = questionRequest.getIncome();
         long hasAccount = checkCustomizedProductsHasAccount(products);
@@ -114,13 +110,20 @@ public class BundleService {
         }
         if (income <= 12000) {
             return getCustomizedBundleResponseForIncomeUpTo12000(request, products, hasAccount);
-            //  }
         } else if (income <= 40000) {
             return getCustomizedBundleResponseForIncomeUpTo40000(request, products, hasAccount);
-            // }
         } else { //income > 40000
             return getCustomizedBundleResponseForIncomeMoreThan40000(request, products, hasAccount);
         }
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForJuniorSaver(CustomizeBundleRequest request, List<Product> products) {
+        List<String> invalidProducts = products.stream()
+                .filter(product -> !product.equals(JUNIOR_SAVER_ACCOUNT))
+                .map(Product::getLabel)
+                .toList();
+        String message = "Junior Saver cannot do any modification,".concat(String.join(",", invalidProducts));
+        return getCustomizedBundleResponse(request, message, List.of(JUNIOR_SAVER_ACCOUNT));
     }
 
     private CustomizedBundleResponse getCustomizedBundleResponseForIncomeMoreThan40000(CustomizeBundleRequest request, List<Product> products, long hasAccount) {
