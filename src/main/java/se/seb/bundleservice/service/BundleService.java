@@ -96,11 +96,9 @@ public class BundleService {
     }
 
     private CustomizedBundleResponse customizeProducts(CustomizeBundleRequest request) {
-        List<Product> removeProducts = request.getRemoveProducts() == null ? List.of() : request.getRemoveProducts();
-        List<Product> addProducts = request.getAddProducts() == null ? List.of() : request.getAddProducts();
         List<Product> products = new ArrayList<>(request.getBundle().getProducts());
-        products.addAll(addProducts);
-        products.removeAll(removeProducts);
+        products.addAll(request.getAddProducts());
+        products.removeAll(request.getRemoveProducts());
         return validateCustomizedProducts(request, products.stream().distinct().toList());
     }
 
