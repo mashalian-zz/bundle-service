@@ -43,7 +43,6 @@ public class BundleController {
             @ApiResponse(responseCode = "202", description = "Customized suggestion successfully"),
             @ApiResponse(responseCode = "451", description = "Unable to customize suggestion due to legal reasons", content = @Content)})
     public ResponseEntity<CustomizedBundleResponse> customizeSuggestion(@Valid @RequestBody CustomizeBundleRequest request) {
-        return ResponseEntity.accepted()
-                .body(bundleService.modifySuggestedBundle(request));
+        return bundleService.customizeBundle(request);
     }
 }

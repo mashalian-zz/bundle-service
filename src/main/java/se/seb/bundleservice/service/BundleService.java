@@ -2,31 +2,37 @@ package se.seb.bundleservice.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import se.seb.bundleservice.exception.UnmatchedConditionsException;
 import se.seb.bundleservice.model.Bundle;
 import se.seb.bundleservice.model.BundleResponse;
 import se.seb.bundleservice.model.CustomizeBundleRequest;
 import se.seb.bundleservice.model.CustomizedBundleResponse;
 import se.seb.bundleservice.model.Product;
 import se.seb.bundleservice.model.QuestionRequest;
+import se.seb.bundleservice.model.Status;
 import se.seb.bundleservice.model.Student;
+import se.seb.bundleservice.model.Violations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
+import static se.seb.bundleservice.model.Age.UNDER_AGE;
 import static se.seb.bundleservice.model.Bundle.CLASSIC;
 import static se.seb.bundleservice.model.Bundle.CLASSIC_PLUS;
+import static se.seb.bundleservice.model.Bundle.EMPTY;
 import static se.seb.bundleservice.model.Bundle.GOLD;
 import static se.seb.bundleservice.model.Bundle.JUNIOR_SAVER;
 import static se.seb.bundleservice.model.Bundle.STUDENT;
-import static se.seb.bundleservice.model.Product.CREDIT_CARD;
-import static se.seb.bundleservice.model.Product.CURRENT_ACCOUNT;
-import static se.seb.bundleservice.model.Product.CURRENT_ACCOUNT_PLUS;
-import static se.seb.bundleservice.model.Product.GOLD_CREDIT_CARD;
-import static se.seb.bundleservice.model.Product.JUNIOR_SAVER_ACCOUNT;
-import static se.seb.bundleservice.model.Product.STUDENT_ACCOUNT;
+import static se.seb.bundleservice.model.Violations.ACCOUNT_ISSUE;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_MORE_THAN_40K;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_UP_TO_12K;
+import static se.seb.bundleservice.model.Violations.ILLEGAL_PRODUCTS_UP_TO_40K;
+import static se.seb.bundleservice.model.Violations.INCOME_ZERO;
+
 
 @Service
 @Slf4j
@@ -40,19 +46,14 @@ public class BundleService {
         };
     }
 
-    public CustomizedBundleResponse modifySuggestedBundle(CustomizeBundleRequest customizeBundleRequest) {
+    public ResponseEntity<CustomizedBundleResponse> customizeBundle(CustomizeBundleRequest customizeBundleRequest) {
         CustomizeBundleRequest request = validateRequest(customizeBundleRequest);
-        return switch (customizeBundleRequest.getBundle()) {
-            case GOLD -> modifyGoldBundle(request);
-            case CLASSIC_PLUS -> modifyClassicPlusBundle(request);
-            case CLASSIC -> modifyClassicBundle(request);
-            case STUDENT -> modifyStudentBundle(request);
-            case JUNIOR_SAVER -> CustomizedBundleResponse.builder()
-                    .bundleName(customizeBundleRequest.getBundle().getName())
-                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
-                    .message("Junior Saver cannot do any modification")
-                    .build();
-        };
+        CustomizedBundleResponse response = customizeProducts(request);
+        if (response.getStatus().equals(Status.SUCCESSFUL)) {
+            return ResponseEntity.accepted().body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS).body(response);
+        }
     }
 
     private BundleResponse suggestAdultBundle(QuestionRequest request) {
@@ -61,7 +62,7 @@ public class BundleService {
         } else {
             int income = request.getIncome();
             if (income == 0) {
-                return getBundleResponse(null);
+                return getBundleResponse(EMPTY);
             } else if (income <= 12000) {
                 return getBundleResponse(CLASSIC);
             } else if (income <= 40000) {
@@ -72,98 +73,19 @@ public class BundleService {
     }
 
     private BundleResponse getBundleResponse(Bundle bundle) {
-        if (bundle == null) {
-            return BundleResponse.builder()
-                    .BundleName("Cannot suggest any bundle")
-                    .build();
-        }
         return BundleResponse.builder()
                 .BundleName(bundle.getName())
                 .products(bundle.getProducts())
                 .build();
     }
 
-    private CustomizedBundleResponse modifyStudentBundle(CustomizeBundleRequest customizeBundleRequest) {
-        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CURRENT_ACCOUNT))) {
-            log.warn("Customer with name {} and Student bundle is not allowed to have current account/plus or any gold credit card.",
-                    customizeBundleRequest.getQuestionRequest().getCustomerName());
-
-            return CustomizedBundleResponse.builder()
-                    .bundleName(customizeBundleRequest.getBundle().getName())
-                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
-                    .message("Having products from Gold bundle or current account are not allowed in Student bundle")
-                    .build();
-        } else {
-            return doModifyProductsForBundle(customizeBundleRequest);
-        }
-    }
-
-    private CustomizedBundleResponse modifyClassicBundle(CustomizeBundleRequest customizeBundleRequest) {
-        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD, CREDIT_CARD))) {
-            log.warn("Customer with name {} and classic bundle is not allowed to have current account plus or any credit card.",
-                    customizeBundleRequest.getQuestionRequest().getCustomerName());
-
-            return CustomizedBundleResponse.builder()
-                    .bundleName(customizeBundleRequest.getBundle().getName())
-                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
-                    .message("Having products from Gold bundle or any credit cards are not allowed in Classic bundle")
-                    .build();
-        } else {
-            return doModifyProductsForBundle(customizeBundleRequest);
-        }
-    }
-
-    private CustomizedBundleResponse modifyClassicPlusBundle(CustomizeBundleRequest customizeBundleRequest) {
-        if (CollectionUtils.containsAny(customizeBundleRequest.getAddProducts(), List.of(CURRENT_ACCOUNT_PLUS, GOLD_CREDIT_CARD))) {
-            log.warn("Customer with name {} tries to have current account plus or gold credit card.",
-                    customizeBundleRequest.getQuestionRequest().getCustomerName());
-
-            return CustomizedBundleResponse.builder()
-                    .bundleName(customizeBundleRequest.getBundle().getName())
-                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
-                    .message("Having products from Gold bundle are not allowed in Classic Plus bundle")
-                    .build();
-        } else {
-            return doModifyProductsForBundle(customizeBundleRequest);
-        }
-    }
-
-    private CustomizedBundleResponse modifyGoldBundle(CustomizeBundleRequest customizeBundleRequest) {
-        if (customizeBundleRequest.getAddProducts().contains(CURRENT_ACCOUNT) &&
-                !customizeBundleRequest.getRemoveProducts().contains(CURRENT_ACCOUNT_PLUS)) {
-            log.warn("Customer with name {} tries to have more that one account.",
-                    customizeBundleRequest.getQuestionRequest().getCustomerName());
-
-            return CustomizedBundleResponse.builder()
-                    .bundleName(customizeBundleRequest.getBundle().getName())
-                    .customerName(customizeBundleRequest.getQuestionRequest().getCustomerName())
-                    .message("Having more than one account is not allowed")
-                    .build();
-        } else {
-            return doModifyProductsForBundle(customizeBundleRequest);
-        }
-    }
-
-    private CustomizedBundleResponse doModifyProductsForBundle(CustomizeBundleRequest request) {
-        List<Product> products = customizeProducts(request);
-        long count = checkCustomizedProductsHasAccount(products);
-        String message;
-        if (count == 0) {
-            message = "Having at least one account is necessary";
-            return getCustomizedBundleResponse(request, message, null);
-        }
-
-        log.info("Customer with name {} customized products {}", request.getQuestionRequest().getCustomerName(), products.stream().map(Product::getLabel).toList());
-        message = "Products has been modified successfully.";
-        return getCustomizedBundleResponse(request, message, products);
-    }
-
-    private CustomizedBundleResponse getCustomizedBundleResponse(CustomizeBundleRequest request, String message, List<Product> products) {
+    private CustomizedBundleResponse getCustomizedBundleResponse(CustomizeBundleRequest request, List<Violations> violations, List<Product> products, List<Product> forbiddenProducts) {
         return CustomizedBundleResponse.builder()
                 .bundleName(request.getBundle().getName())
-                .customerName(request.getQuestionRequest().getCustomerName())
                 .products(products)
-                .message(message)
+                .illegalProducts(forbiddenProducts)
+                .violations(violations)
+                .status(violations.size() == 0 ? Status.SUCCESSFUL : Status.ERROR)
                 .build();
     }
 
@@ -173,13 +95,102 @@ public class BundleService {
                 .count();
     }
 
-    private List<Product> customizeProducts(CustomizeBundleRequest request) {
+    private CustomizedBundleResponse customizeProducts(CustomizeBundleRequest request) {
         List<Product> removeProducts = request.getRemoveProducts() == null ? List.of() : request.getRemoveProducts();
         List<Product> addProducts = request.getAddProducts() == null ? List.of() : request.getAddProducts();
         List<Product> products = new ArrayList<>(request.getBundle().getProducts());
         products.addAll(addProducts);
         products.removeAll(removeProducts);
-        return products.stream().distinct().toList();
+        return validateCustomizedProducts(request, products.stream().distinct().toList());
+    }
+
+    private CustomizedBundleResponse validateCustomizedProducts(CustomizeBundleRequest request, List<Product> products) {
+        QuestionRequest questionRequest = request.getQuestionRequest();
+        if (questionRequest.getAge().equals(UNDER_AGE)) {
+            return getCustomizedBundleResponseForJuniorSaver(request, products);
+        }
+        int income = questionRequest.getIncome();
+        long hasAccount = checkCustomizedProductsHasAccount(products);
+        List<Violations> violations = new ArrayList<>();
+        if (hasAccount == 0 || hasAccount > 1) {
+            violations.add(ACCOUNT_ISSUE);
+        }
+        if (questionRequest.getStudent().equals(Student.YES)) {
+            return getCustomizedBundleResponseForStudent(request, products, violations);
+        } else if (income == 0) {
+            return getCustomizedBundleResponseForIncomeZero(request, products, violations);
+        } else if (income <= 12000) {
+            return getCustomizedBundleResponseForIncomeUpTo12K(request, products, violations);
+        } else if (income <= 40000) {
+            return getCustomizedBundleResponseForIncomeUpTo40K(request, products, violations);
+        } else { //income > 40000
+            return getCustomizedBundleResponseForIncomeMoreThan40K(request, products, violations);
+        }
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForJuniorSaver(CustomizeBundleRequest request, List<Product> products) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, Violations.JUNIOR_ISSUE.getProducts());
+        return getCustomizedBundleResponseWithViolations(request, products, List.of(Violations.JUNIOR_ISSUE), forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForIncomeMoreThan40K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_MORE_THAN_40K.getProducts());
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(ILLEGAL_PRODUCTS_MORE_THAN_40K);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseWithViolations(CustomizeBundleRequest request, List<Product> products, List<Violations> violations, List<Product> forbiddenProducts) {
+        if (violations.contains(ACCOUNT_ISSUE)) {
+            forbiddenProducts = Stream.concat(forbiddenProducts.stream(),
+                    products.stream().filter(Product::isAccount)).distinct().toList();
+        }
+        log.warn("Unable to customize due to {}", violations);
+        return getCustomizedBundleResponse(request, violations, products, forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForIncomeUpTo40K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_UP_TO_40K.getProducts());
+
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(Violations.ILLEGAL_PRODUCTS_UP_TO_40K);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForIncomeUpTo12K(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, ILLEGAL_PRODUCTS_UP_TO_12K.getProducts());
+
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(ILLEGAL_PRODUCTS_UP_TO_12K);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForIncomeZero(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, INCOME_ZERO.getProducts());
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(INCOME_ZERO);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
+    }
+
+    private CustomizedBundleResponse getCustomizedBundleResponseForStudent(CustomizeBundleRequest request, List<Product> products, List<Violations> violations) {
+        List<Product> forbiddenProducts = getForbiddenProducts(products, Violations.ILLEGAL_PRODUCTS_FOR_STUDENT.getProducts());
+        if (!forbiddenProducts.isEmpty()) {
+            violations.add(Violations.ILLEGAL_PRODUCTS_FOR_STUDENT);
+        }
+        return getCustomizedBundleResponseWithViolations(request, products, violations, forbiddenProducts);
+    }
+
+    private List<Product> getForbiddenProducts(List<Product> source, List<Product> forbidden) {
+        if (CollectionUtils.containsAny(source, forbidden)) {
+            return source.stream()
+                    .filter(product -> forbidden.stream().anyMatch(product::equals))
+                    .toList();
+        }
+        return List.of();
     }
 
     private CustomizeBundleRequest validateRequest(CustomizeBundleRequest customizeBundleRequest) {
@@ -187,14 +198,6 @@ public class BundleService {
         List<Product> removeProducts = customizeBundleRequest.getRemoveProducts() == null ? List.of() : customizeBundleRequest.getRemoveProducts();
         QuestionRequest questionRequest = customizeBundleRequest.getQuestionRequest();
         Bundle bundle = customizeBundleRequest.getBundle();
-        CustomizeBundleRequest bundleRequest = new CustomizeBundleRequest(bundle, questionRequest, removeProducts, addProducts);
-        List<String> largeBundles = List.of(GOLD.getName(), CLASSIC.getName(), CLASSIC_PLUS.getName());
-        if (largeBundles.contains(bundle.getName())) {
-            if (CollectionUtils.containsAny(addProducts, List.of(JUNIOR_SAVER_ACCOUNT, STUDENT_ACCOUNT))) {
-                log.warn("Gold or classic or classic plus bundle for customer {} does not have conditions for Junior or Student Account", questionRequest.getCustomerName());
-                throw new UnmatchedConditionsException("Junior Saver Account or Student Account is not acceptable for Gold or classic or classic plus bundle");
-            }
-        }
-        return bundleRequest;
+        return new CustomizeBundleRequest(bundle, questionRequest, removeProducts, addProducts);
     }
 }

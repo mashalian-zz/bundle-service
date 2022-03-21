@@ -6,12 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import se.seb.bundleservice.model.Age;
 import se.seb.bundleservice.model.BundleResponse;
 import se.seb.bundleservice.model.CustomizeBundleRequest;
 import se.seb.bundleservice.model.CustomizedBundleResponse;
 import se.seb.bundleservice.model.QuestionRequest;
+import se.seb.bundleservice.model.Status;
 import se.seb.bundleservice.model.Student;
 import se.seb.bundleservice.service.BundleService;
 
@@ -51,7 +53,7 @@ class BundleControllerTest {
                 .BundleName(JUNIOR_SAVER.getName())
                 .products(JUNIOR_SAVER.getProducts())
                 .build();
-        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        QuestionRequest question = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         given(bundleService.suggestBundle(eq(question))).willReturn(bundleResponse);
 
         mockMvc.perform(post("/suggest")
@@ -70,14 +72,14 @@ class BundleControllerTest {
                 .BundleName(GOLD.getName())
                 .products(GOLD.getProducts())
                 .build();
-        QuestionRequest question = new QuestionRequest("Robin", Age.UNDER_AGE, Student.NO, 0);
+        QuestionRequest question = new QuestionRequest(Age.UNDER_AGE, Student.NO, 0);
         CustomizeBundleRequest modifyBundleRequest = new CustomizeBundleRequest(GOLD, question, List.of(CURRENT_ACCOUNT_PLUS), List.of(CURRENT_ACCOUNT));
         CustomizedBundleResponse response = CustomizedBundleResponse.builder()
                 .bundleName(bundleResponse.getBundleName())
-                .customerName(question.getCustomerName())
+                .status(Status.SUCCESSFUL)
                 .products(List.of(CURRENT_ACCOUNT, DEBIT_CARD, GOLD_CREDIT_CARD))
                 .build();
-        given(bundleService.modifySuggestedBundle(eq(modifyBundleRequest))).willReturn(response);
+        given(bundleService.customizeBundle(eq(modifyBundleRequest))).willReturn(ResponseEntity.accepted().body(response));
 
 
         mockMvc.perform(put("/customize")
@@ -85,8 +87,8 @@ class BundleControllerTest {
                         .content(objectMapper.writeValueAsString(modifyBundleRequest)))
                 .andDo(print())
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.customerName", equalTo("Robin")))
                 .andExpect(jsonPath("$.bundleName", equalTo(GOLD.getName())))
+                .andExpect(jsonPath("$.status", equalTo(Status.SUCCESSFUL.name())))
                 .andExpect(jsonPath("$.products", equalTo(List.of(CURRENT_ACCOUNT.name(), DEBIT_CARD.name(), GOLD_CREDIT_CARD.name()))));
     }
 }
